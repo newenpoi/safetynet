@@ -9,12 +9,10 @@ import com.stargazer.newenpoi.safetynet.util.JsonUtils;
 @Repository
 public class PersonDaoImpl implements PersonDao {
 
-	public PersonDaoImpl() {}
-
 	@Override
 	public List<Person> findAll() throws IOException {
         // Charge les données json voulues en les convertissant sous forme d'objet Java.
-		List<Person> persons = JsonUtils.retrieve("persons", Person.class);
+		List<Person> persons = JsonUtils.getInstance().retrieve("persons", Person.class);
         
 		return persons;
 	}

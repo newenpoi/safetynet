@@ -12,9 +12,12 @@ import com.stargazer.newenpoi.safetynet.dao.PersonDaoImpl;
 import com.stargazer.newenpoi.safetynet.dto.PersonDTO;
 import com.stargazer.newenpoi.safetynet.service.PersonService;
 
+import lombok.AllArgsConstructor;
+
 @Service
+@AllArgsConstructor
 public class PersonServiceImpl implements PersonService {
-    private final PersonDao personDao = new PersonDaoImpl();
+    private final PersonDao personDao;
 
 	@Override
 	public List<PersonDTO> recupererEmails(String ville) throws IOException {
@@ -30,17 +33,5 @@ public class PersonServiceImpl implements PersonService {
 		}
 		
 		return dtoList;
-		
-		/*
-		// Nouvelle liste vide des adresses email.
-		List<String> emails = new ArrayList<>();
-		
-		// Filtre pour chaque personne son adresse email.
-		for (Person p : persons) {
-			if (p.getCity().equals(ville)) emails.add(p.getEmail());
-		}
-		
-		return emails;
-		*/
 	}
 }

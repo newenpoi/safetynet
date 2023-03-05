@@ -2,6 +2,7 @@ package com.stargazer.newenpoi.safetynet.util;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.core.io.DefaultResourceLoader;
@@ -57,5 +58,22 @@ public class JsonUtils {
     	if (node == null) throw new IllegalArgumentException("Le champ %s n'existe pas.".formatted(field));
     	
     	return mapper.readValue(node.traverse(), mapper.getTypeFactory().constructCollectionType(List.class, type));
+    }
+    
+    public <T> List<T> retrieve(String field, String key, String expectedValue, Class<T> type) throws IOException {
+    	ObjectMapper mapper = new ObjectMapper();
+    	List<T> filtered = new ArrayList<>();
+    	
+    	JsonNode root = mapper.readTree(getJsonData());
+    	JsonNode nodes = root.get(field);
+    	
+    	if (nodes == null) throw new IllegalArgumentException("Le champ %s n'existe pas.".formatted(field));
+    	
+    	for (JsonNode node : nodes) {
+    		JsonNode value = node.get(key);
+    		if (value != null && value.asText().equals(expectedValue)) filtered.add(mapper.treeToValue(node, type));
+    	}
+    	
+    	return filtered;
     }
 }

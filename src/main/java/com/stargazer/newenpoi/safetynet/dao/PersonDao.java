@@ -7,4 +7,5 @@ import com.stargazer.newenpoi.safetynet.business.Person;
 
 public interface PersonDao {
 	List<Person> findAll() throws IOException;
+	List<Person> findByAddress(String key) throws IOException;
 }

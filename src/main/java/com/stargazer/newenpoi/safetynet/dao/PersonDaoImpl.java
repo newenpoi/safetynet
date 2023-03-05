@@ -12,8 +12,11 @@ public class PersonDaoImpl implements PersonDao {
 	@Override
 	public List<Person> findAll() throws IOException {
         // Charge les données json voulues en les convertissant sous forme d'objet Java.
-		List<Person> persons = JsonUtils.getInstance().retrieve("persons", Person.class);
-        
-		return persons;
+		return JsonUtils.getInstance().retrieve("persons", Person.class);
+	}
+	
+	@Override
+	public List<Person> findByAddress(String value) throws IOException {
+		return JsonUtils.getInstance().retrieve("persons", "address", value, Person.class);
 	}
 }

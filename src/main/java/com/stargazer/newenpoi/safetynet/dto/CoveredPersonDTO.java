@@ -3,10 +3,11 @@ package com.stargazer.newenpoi.safetynet.dto;
 import com.stargazer.newenpoi.safetynet.business.Person;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
-public class ExtendedPersonDTO extends PersonDTO {
-	
+@Setter
+public class CoveredPersonDTO extends PersonDTO {
 	private String firstName;
 	private String lastName;
 	private String address;
@@ -14,14 +15,15 @@ public class ExtendedPersonDTO extends PersonDTO {
 	private String zip;
 	private String phone;
 	
-	public ExtendedPersonDTO(Person p) {
+	private String dob;
+	
+	public CoveredPersonDTO(Person p) {
 		super(p);
 		
+		this.email = null;
 		this.firstName = p.getFirstName();
 		this.lastName = p.getLastName();
 		this.address = p.getAddress();
-		this.city = p.getCity();
-		this.zip = p.getZip();
 		this.phone = p.getPhone();
 	}
 }

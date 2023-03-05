@@ -41,4 +41,17 @@ class JsonUtilsTest {
 		// Assert.
 		assertThrows(IllegalArgumentException.class, () -> jsonUtils.retrieve(field, Person.class));
 	}
+	
+	@Test
+	void testRetrievePersonsFiltered_shouldReturnList_OfPerson() throws IOException {
+		// Arrange.
+		String field = "persons", key = "address", value = "892 Downing Ct";
+		
+		// Act.
+		List<Person> list = jsonUtils.retrieve(field, key, value, Person.class);
+		
+		// Assert.
+		assertNotNull(list);
+		assertFalse(list.isEmpty());
+	}
 }

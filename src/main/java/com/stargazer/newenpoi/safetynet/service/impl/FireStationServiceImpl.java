@@ -1,11 +1,8 @@
 package com.stargazer.newenpoi.safetynet.service.impl;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.time.DateTimeException;
-import java.time.LocalDate;
-import java.time.Period;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,8 +18,10 @@ import com.stargazer.newenpoi.safetynet.dao.MedicalRecordDao;
 import com.stargazer.newenpoi.safetynet.dao.PersonDao;
 import com.stargazer.newenpoi.safetynet.dto.CoveredPersonDTO;
 import com.stargazer.newenpoi.safetynet.dto.CustomCoveredPersonDTO;
-import com.stargazer.newenpoi.safetynet.dto.CustomFirePersonDTO;
+import com.stargazer.newenpoi.safetynet.dto.PersonUnderFireDTO;
+import com.stargazer.newenpoi.safetynet.dto.PersonUnderFloodDTO;
 import com.stargazer.newenpoi.safetynet.dto.FireDTO;
+import com.stargazer.newenpoi.safetynet.dto.FloodDTO;
 import com.stargazer.newenpoi.safetynet.dto.PhonesDTO;
 import com.stargazer.newenpoi.safetynet.service.FireStationService;
 import com.stargazer.newenpoi.safetynet.util.DateUtils;
@@ -38,39 +37,36 @@ public class FireStationServiceImpl implements FireStationService {
 	private final MedicalRecordDao medicalRecordDao;
 	
 	@Override
-	public CustomCoveredPersonDTO recupererPersonnesCouvertes(String station) throws IOException, ParseException {
+	public CustomCoveredPersonDTO recupererPersonnesCouvertes(String station) throws IOException {
+		Set<String> addresses = new HashSet<>();
+		Set<Person> persons = new HashSet<>();
+		
 		int adults = 0; int kids = 0;
 		
 		// Note : On a besoin de l'adresse de la station.
 		List<FireStation> stations = fireStationDao.findByStation(station);
 		
-		// TODO : Pourquoi pas un findByAddress pour récupérer les personnes couvertes par l'adresse de la station ?
-		// ...
+		// Éviter les doublons si le numéro de station a la même adresse.
+		for (FireStation s : stations) addresses.add(s.getAddress());
 		
+		// Pour chaque adresses, récupérer les personnes vivant à celle-ci.
+		for (String address : addresses) persons.addAll(personDao.findByAddress(address));
 		
-		List<Person> persons = personDao.findAll();
 		List<MedicalRecord> records = medicalRecordDao.findAll();
 
-		// Récupère les adresses des stations.
-		Set<String> addresses = stations.stream().map(FireStation::getAddress).collect(Collectors.toSet());
+		List<CoveredPersonDTO> coveredPersons = persons.stream()
+			    .flatMap(person -> records.stream()
+			        .filter(record -> person.getFirstName().equals(record.getFirstName()) && person.getLastName().equals(record.getLastName()))
+			        .map(record -> new CoveredPersonDTO(person, record.getBirthdate()))
+			    )
+			    .collect(Collectors.toList());
 		
-		// Filtre les personnes couvertes par l'adresse des stations.
-		List<CoveredPersonDTO> matches = persons.stream().filter(person -> addresses.contains(person.getAddress())).map(CoveredPersonDTO::new).collect(Collectors.toList());
-		
-		// Parcours chaque match et pour chaque entrée correspondante calcul et défini la date de naissance depuis l'enregistrement médical.
-		for (CoveredPersonDTO match : matches) {
-		    for (MedicalRecord record : records) {
-		        if (match.getFirstName().equals(record.getFirstName()) && match.getLastName().equals(record.getLastName())) {
-		            
-		        	if (DateUtils.calculateAge(record.getBirthdate()) > 18) adults++;
-		        	else kids++;
-		        	
-		        	match.setDob(record.getBirthdate());
-		        }
-		    }
+		for (CoveredPersonDTO dto : coveredPersons) {
+        	if (DateUtils.calculateAge(dto.getBirthdate()) > 18) adults++;
+        	else kids++;
 		}
 		
-		CustomCoveredPersonDTO custom = new CustomCoveredPersonDTO(adults, kids, matches);
+		CustomCoveredPersonDTO custom = new CustomCoveredPersonDTO(adults, kids, coveredPersons);
 		return custom;
 	}
 
@@ -108,7 +104,7 @@ public class FireStationServiceImpl implements FireStationService {
 	    List<MedicalRecord> medicalRecords = medicalRecordDao.findAll();
 	    
 	    // Map les personnes en tant que CustomFirePersonDTO.
-	    List<CustomFirePersonDTO> customPersons = persons.stream()
+	    List<PersonUnderFireDTO> customPersons = persons.stream()
 	            .map(person -> {
 	                // Récupère l'enregistrement médical pour cette personne.
 	                Optional<MedicalRecord> medicalRecordOptional = medicalRecords.stream()
@@ -116,7 +112,7 @@ public class FireStationServiceImpl implements FireStationService {
 	                        .findFirst();
 
 	                // Créé un objet CustomFirePersonDTO pour la personne.
-	                CustomFirePersonDTO customPerson = new CustomFirePersonDTO();
+	                PersonUnderFireDTO customPerson = new PersonUnderFireDTO();
 	                customPerson.setLastName(person.getLastName());
 	                customPerson.setPhoneNumber(person.getPhone());
 
@@ -137,5 +133,42 @@ public class FireStationServiceImpl implements FireStationService {
 	    fireDTO.setStations(stationNumbers);
 	    
 	    return fireDTO;
+	}
+
+	@Override
+	public List<FloodDTO> recupererHabitantsDangerInnondation(List<String> stations) throws IOException {
+		
+		// Récupère chaque caserne de la liste.
+		List<FireStation> fireStations = fireStationDao.findByStationIn(stations);
+		
+		// La liste contenant une adresse et la liste des membres du foyer.
+		List<FloodDTO> dtoList = new ArrayList<FloodDTO>();
+		
+		// Parcours chaque station.
+		for (FireStation fs : fireStations) {
+			// Renvoie une liste de personnes vivant à l'adresse de la caserne.
+			List<Person> persons = personDao.findByAddress(fs.getAddress());
+			
+			// Prépare la liste des personnes à ajouter dans un FloodDTO.
+			List<PersonUnderFloodDTO> underFloodDtoList = new ArrayList<PersonUnderFloodDTO>();
+			
+			// Pour chaque personne, créer une nouvelle PersonUnderFloodDTO.
+			for (Person p : persons) {
+				
+				// Récupère l'enregistrement médical de la personne.
+				MedicalRecord record = medicalRecordDao.findByFirstAndLastName(p.getFirstName(), p.getLastName());
+				PersonUnderFloodDTO personUnderFloodDto = new PersonUnderFloodDTO(p);
+				
+				personUnderFloodDto.setAge(DateUtils.calculateAge(record.getBirthdate()));
+				personUnderFloodDto.setMedications(record.getMedications());
+				personUnderFloodDto.setAllergies(record.getAllergies());
+				underFloodDtoList.add(personUnderFloodDto);
+			}
+			
+			dtoList.add(new FloodDTO(fs.getAddress(), underFloodDtoList));
+		}
+		
+		
+		return dtoList;
 	}
 }

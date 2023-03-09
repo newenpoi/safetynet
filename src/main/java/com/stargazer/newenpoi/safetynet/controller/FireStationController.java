@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.stargazer.newenpoi.safetynet.dto.CustomCoveredPersonDTO;
 import com.stargazer.newenpoi.safetynet.dto.FireDTO;
+import com.stargazer.newenpoi.safetynet.dto.FloodDTO;
 import com.stargazer.newenpoi.safetynet.dto.PhonesDTO;
 import com.stargazer.newenpoi.safetynet.service.FireStationService;
 
@@ -69,14 +70,17 @@ public class FireStationController {
 	/**
 	 * Cette liste renvoie une liste de tous les foyers desservies par les casernes spécifiées.
 	 * Elle regroupe les personnes par adresse.
-	 * Nom, numéro de téléphone, âge. Antécédents médicaux à côté de chaque nom.
+	 * Nom, numéro de téléphone, âge. Antécédents médicaux (médicaments et allergies) à côté de chaque nom.
 	 * @param address
 	 * @return
 	 * @throws IOException
 	 * @throws ParseException
 	 */
-	@GetMapping("/flood")
-	public ResponseEntity<?> getPersonsWhenFlood(@RequestParam(name = "stations", required = true) List<Long> stations) throws IOException, ParseException {
-		return null;
+	@GetMapping("/flood/stations")
+	public ResponseEntity<?> getPersonsWhenFlood(@RequestParam(name = "stations", required = true) List<String> stations) throws IOException, ParseException {
+		
+		List<FloodDTO> dtoList = fireStationService.recupererHabitantsDangerInnondation(stations);
+		
+		return ResponseEntity.ok(dtoList);
 	}
 }

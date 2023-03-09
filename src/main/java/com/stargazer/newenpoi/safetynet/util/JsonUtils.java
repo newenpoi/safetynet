@@ -49,7 +49,7 @@ public class JsonUtils {
     /*
      * Cette méthode générique convertie les objets json en objets java.
      */
-    public <T> List<T> retrieve(String field, Class<T> type) throws IOException {
+    public <T> List<T> retrieve(String field, Class<T> type) {
     	ObjectMapper mapper = new ObjectMapper();
     	
     	JsonNode root = mapper.readTree(getJsonData());
@@ -76,4 +76,20 @@ public class JsonUtils {
     	
     	return filtered;
     }
+
+	public <T> T retrieve(String field, String key, String value, String secondKey, String secondValue, Class<T> type) throws IOException {
+    	ObjectMapper mapper = new ObjectMapper();
+    	
+    	JsonNode root = mapper.readTree(getJsonData());
+    	JsonNode nodes = root.get(field);
+    	
+    	if (nodes == null) throw new IllegalArgumentException("Le champ %s n'existe pas.".formatted(field));
+    	
+    	for (JsonNode node : nodes) {
+    		// Renvoie un objet de type générique si l'entrée correspond.
+    		if (node.get(key) != null && node.get(key).asText().equals(value) && node.get(secondKey).asText().equals(secondValue)) return mapper.treeToValue(node, type);
+    	}
+		
+		return null;
+	}
 }

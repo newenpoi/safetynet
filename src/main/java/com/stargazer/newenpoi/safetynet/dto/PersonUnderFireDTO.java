@@ -9,11 +9,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FireDTO {
-	
-	// Les personnes en danger.
-	List<PersonUnderFireDTO> persons;
-	
-	// Le ou les casernes à cette adresse.
-	List<Long> stations;
+public class PersonUnderFireDTO {
+	String lastName;
+	String phoneNumber;
+	int age;
+	List<String> medications;
 }

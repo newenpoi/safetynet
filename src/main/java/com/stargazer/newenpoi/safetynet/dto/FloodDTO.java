@@ -9,11 +9,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FireDTO {
+public class FloodDTO {
+	// Adresse du foyer.
+	private String address;
 	
-	// Les personnes en danger.
-	List<PersonUnderFireDTO> persons;
-	
-	// Le ou les casernes à cette adresse.
-	List<Long> stations;
+	// Personnes habitants dans ce foyer.
+	private List<PersonUnderFloodDTO> persons;
 }

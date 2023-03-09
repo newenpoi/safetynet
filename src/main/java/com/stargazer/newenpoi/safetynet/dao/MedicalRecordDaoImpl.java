@@ -16,4 +16,8 @@ public class MedicalRecordDaoImpl implements MedicalRecordDao {
 		return JsonUtils.getInstance().retrieve("medicalrecords", MedicalRecord.class);
 	}
 
+	@Override
+	public MedicalRecord findByFirstAndLastName(String firstName, String lastName) throws IOException {
+		return JsonUtils.getInstance().retrieve("medicalrecords", "firstName", firstName, "lastName", lastName, MedicalRecord.class);
+	}
 }

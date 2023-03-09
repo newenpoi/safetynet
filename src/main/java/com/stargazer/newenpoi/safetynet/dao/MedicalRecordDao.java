@@ -7,4 +7,5 @@ import com.stargazer.newenpoi.safetynet.business.MedicalRecord;
 
 public interface MedicalRecordDao {
 	List<MedicalRecord> findAll() throws IOException;
+	MedicalRecord findByFirstAndLastName(String firstName, String lastName) throws IOException;
 }

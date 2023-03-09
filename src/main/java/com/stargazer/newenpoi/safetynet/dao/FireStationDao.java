@@ -9,4 +9,5 @@ public interface FireStationDao {
 	List<FireStation> findAll() throws IOException;
 	List<FireStation> findByStation(String station) throws IOException;
 	List<FireStation> findByAddress(String address) throws IOException;
+	List<FireStation> findByStationIn(List<String> stations) throws IOException;
 }

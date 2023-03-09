@@ -7,23 +7,18 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CoveredPersonDTO extends PersonDTO {
+public class CoveredPersonDTO {
 	private String firstName;
 	private String lastName;
 	private String address;
-	private String city;
-	private String zip;
 	private String phone;
+	private String birthdate;
 	
-	private String dob;
-	
-	public CoveredPersonDTO(Person p) {
-		super(p);
-		
-		this.email = null;
+	public CoveredPersonDTO(Person p, String birthdate) {
 		this.firstName = p.getFirstName();
 		this.lastName = p.getLastName();
 		this.address = p.getAddress();
 		this.phone = p.getPhone();
+		this.birthdate = birthdate;
 	}
 }

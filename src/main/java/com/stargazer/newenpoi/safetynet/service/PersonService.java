@@ -1,12 +1,13 @@
 package com.stargazer.newenpoi.safetynet.service;
 
-import java.io.IOException;
 import java.util.List;
 
-import com.stargazer.newenpoi.safetynet.dto.ChildAlertDTO;
-import com.stargazer.newenpoi.safetynet.dto.PersonDTO;
+import com.stargazer.newenpoi.safetynet.dto.ChildDTO;
+import com.stargazer.newenpoi.safetynet.dto.EmailsDTO;
+import com.stargazer.newenpoi.safetynet.dto.ExtendedPersonDTO;
 
 public interface PersonService {
-	List<PersonDTO> recupererEmails(String ville) throws IOException;
-	List<ChildAlertDTO> recupererEnfants(String address) throws IOException;
+	EmailsDTO recupererEmails(String ville);
+	List<ChildDTO> recupererEnfants(String address);
+	ExtendedPersonDTO recupererPersonne(String firstName, String lastName);
 }

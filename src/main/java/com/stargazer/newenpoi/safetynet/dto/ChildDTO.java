@@ -10,16 +10,15 @@ import lombok.Data;
 
 @AllArgsConstructor
 @Data
-public class ChildAlertDTO {
+public class ChildDTO {
 	private String firstName;
 	private String lastName;
 	private int age;
 	private List<String> houseHold;
 	
-	public ChildAlertDTO(Person p) {
+	public ChildDTO(Person p) {
 		this.firstName = p.getFirstName();
 		this.lastName = p.getLastName();
-		
 		this.houseHold = new ArrayList<String>();
 	}
 }

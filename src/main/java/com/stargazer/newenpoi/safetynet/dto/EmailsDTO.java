@@ -9,10 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class CustomCoveredPersonDTO {
-	
-	int adults;
-	int kids;
-	List<CoveredPersonDTO> persons;
-
+public class EmailsDTO {
+	String address;
+	List<String> emails;
 }

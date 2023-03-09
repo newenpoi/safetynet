@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.stargazer.newenpoi.safetynet.dto.ChildAlertDTO;
-import com.stargazer.newenpoi.safetynet.dto.PersonDTO;
+import com.stargazer.newenpoi.safetynet.dto.ChildDTO;
+import com.stargazer.newenpoi.safetynet.dto.EmailsDTO;
 import com.stargazer.newenpoi.safetynet.service.PersonService;
 
 import lombok.AllArgsConstructor;
@@ -23,19 +23,19 @@ public class PersonController {
 	/**
 	 * Renvoie les adresses mails de tous les habitants de la ville spécifiée en paramètre.
 	 * @param city
-	 * @return une réponse serveur et son contenu.
+	 * @return une liste d'emails et le nom de la ville spécifié.
 	 * @throws IOException
 	 */
 	@GetMapping("/communityEmail")
-	public ResponseEntity<?> getCommunityEmailByCity(@RequestParam(name = "city", required = true) String city) throws IOException {
+	public ResponseEntity<?> getCommunityEmailByCity(@RequestParam(name = "city", required = true) String city) {
 		
 		if (city.isEmpty()) return ResponseEntity.badRequest().body("Vous devez saisir le nom de la ville.");
 		
-		List<PersonDTO> emails = personService.recupererEmails(city);
+		EmailsDTO dto = personService.recupererEmails(city);
 		
-		if (emails.isEmpty()) { return ResponseEntity.notFound().build(); }
+		if (dto == null) { return ResponseEntity.notFound().build(); }
 		
-		return ResponseEntity.ok(emails);
+		return ResponseEntity.ok(dto);
 	}
 	
 	/**
@@ -43,20 +43,32 @@ public class PersonController {
 	 * Elle affiche le prénom, nom, son âge et les membres du même foyer.<br>
 	 * Peut renvoyer une chaîne vide si aucun enfant n'est présent.
 	 * @param address
-	 * @return une réponse serveur et son contenu.
+	 * @return une liste d'enfants et les membres du foyer.
 	 * @throws IOException
 	 */
 	@GetMapping("/childAlert")
-	public ResponseEntity<?> getChildrenByAddress(@RequestParam(name = "address", required = true) String address) throws IOException {
+	public ResponseEntity<?> getChildrenByAddress(@RequestParam(name = "address", required = true) String address) {
 
-		List<ChildAlertDTO> dto = personService.recupererEnfants(address);
+		if (address.isEmpty()) return ResponseEntity.badRequest().body("Vous devez saisir l'adresse.");
 		
-		return ResponseEntity.ok(dto);
+		List<ChildDTO> dtoList = personService.recupererEnfants(address);
+		
+		if (dtoList == null) { return ResponseEntity.notFound().build(); }
+		
+		return ResponseEntity.ok(dtoList);
 	}
 	
+	/**
+	 * Cette méthode renvoie les informations de la personne dont le nom et prénom correspond.
+	 * Prend en considération les personnes de même nom.
+	 * @param firstName
+	 * @param lastName
+	 * @return une liste des informations relatives à la personne (nom, adresse, âge, email, médications, allergies).
+	 */
 	@GetMapping("/personInfo")
 	public ResponseEntity<?> getPersonInfo(@RequestParam(name = "firstName", required = true) String firstName, @RequestParam(name = "lastName", required = true) String lastName) {
-		// TODO: Code.
+		personService.recupererPersonne(firstName, lastName);
+		
 		return ResponseEntity.ok("");
 	}
 }

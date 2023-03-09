@@ -1,13 +1,7 @@
 package com.stargazer.newenpoi.safetynet.service.impl;
 
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.Period;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -16,9 +10,11 @@ import com.stargazer.newenpoi.safetynet.business.MedicalRecord;
 import com.stargazer.newenpoi.safetynet.business.Person;
 import com.stargazer.newenpoi.safetynet.dao.MedicalRecordDao;
 import com.stargazer.newenpoi.safetynet.dao.PersonDao;
-import com.stargazer.newenpoi.safetynet.dto.ChildAlertDTO;
-import com.stargazer.newenpoi.safetynet.dto.PersonDTO;
+import com.stargazer.newenpoi.safetynet.dto.ChildDTO;
+import com.stargazer.newenpoi.safetynet.dto.EmailsDTO;
+import com.stargazer.newenpoi.safetynet.dto.ExtendedPersonDTO;
 import com.stargazer.newenpoi.safetynet.service.PersonService;
+import com.stargazer.newenpoi.safetynet.util.DateUtils;
 
 import lombok.AllArgsConstructor;
 
@@ -26,53 +22,65 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class PersonServiceImpl implements PersonService {
 	
-	private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-	
 	private final PersonDao personDao;
     private final MedicalRecordDao medicalRecordDao;
 
 	@Override
-	public List<PersonDTO> recupererEmails(String ville) throws IOException {
+	public EmailsDTO recupererEmails(String ville) {
 		// La liste des personnes provenant de notre fichier json.
 		List<Person> persons = personDao.findAll();
-		return persons.stream().filter(person -> person.getCity().equals(ville)).map(PersonDTO::new).collect(Collectors.toList());
+		
+		// Utilisation d'un flux afin de filtrer et de renvoyer une liste.
+		List<String> emails = persons.stream().filter(person -> person.getCity().equals(ville)).map(Person::getEmail).collect(Collectors.toList());
+		
+		// Renvoie d'un EmailsDTO ou null si vide.
+		return (emails.isEmpty() ? null : new EmailsDTO(ville, emails));
 	}
 
 	@Override
-	public List<ChildAlertDTO> recupererEnfants(String address) throws IOException {
-		// La liste des personnes filtrées par adresse et les medical records.
+	public List<ChildDTO> recupererEnfants(String address) {		
+		// Récupère les personnes par adresse.
 		List<Person> persons = personDao.findByAddress(address);
-		List<MedicalRecord> records = medicalRecordDao.findAll();
+		List<ChildDTO> dtoList = new ArrayList<>();
 		
-		// Construction d'une map pour accéder plus facilement aux medical records. Grâce à cette stratégie on pourra réaliser recordsByName.get("Zach Zemicks").
-		Map<String, MedicalRecord> recordsByName = records.stream().collect(Collectors.toMap(rec -> rec.getFirstName() + " " + rec.getLastName(), Function.identity()));
-		
-		List<ChildAlertDTO> dtoList = new ArrayList<>();
-		
-	    for (Person person : persons) {
-	        MedicalRecord record = recordsByName.get(person.getFirstName() + " " + person.getLastName());
+		for (Person p : persons) {
+	        MedicalRecord record = medicalRecordDao.findByFirstAndLastName(p.getFirstName(), p.getLastName());
 	        
-	        // On s'assure que l'enregistrement médical ne soit pas null.
+	        // Si son enregistrement médical existe.
 	        if (record != null) {
-	            // On converti la date de naissance (chaine) vers un objet LocalDate exploitable.
-	        	LocalDate dob = LocalDate.parse(record.getBirthdate(), formatter);
-	            int age = Period.between(dob, LocalDate.now()).getYears();
+	            int age = DateUtils.calculateAge(record.getBirthdate());
 	            
 	            if (age <= 18) {
-	                ChildAlertDTO childAlertDTO = new ChildAlertDTO(person);
-	                childAlertDTO.setAge(age);
+	                ChildDTO dto = new ChildDTO(p);
+	                dto.setAge(age);
 
-	                // Récupération des membres de la famille avec le même nom en évitant d'ajouter l'enfant (la personne) actuellement filtré.
-	                List<String> members = persons.stream().filter(p -> p.getLastName().equals(person.getLastName()) && !p.equals(person))
-	                	.map(p -> p.getFirstName()).collect(Collectors.toList());
+	                // Récupération des membres de la famille autre que l'enfant actuellement filtré.
+	                List<String> members = persons.stream()
+	                    .filter(member -> member.getLastName().equals(member.getLastName()) && !member.equals(p))
+	                    .map(member -> member.getFirstName())
+	                    .collect(Collectors.toList());
 	                
-	                // Définie les membres de famille de l'enfant et ajoute la dto à la liste.
-	                childAlertDTO.setHouseHold(members);
-	                dtoList.add(childAlertDTO);
+	                // Définie les membres de la famille et ajoute cet enfant à la liste.
+	                dto.setHouseHold(members);
+	                dtoList.add(dto);
 	            }
-        	}
-	    }
+	        }
+		}
 		
 		return dtoList;
+	}
+
+	@Override
+	public ExtendedPersonDTO recupererPersonne(String firstName, String lastName) {
+		
+		Person p = personDao.findByFirstAndLastName(firstName, lastName);
+		MedicalRecord r = medicalRecordDao.findByFirstAndLastName(firstName, lastName);
+		
+		ExtendedPersonDTO dto = new ExtendedPersonDTO(p);
+		dto.setAge(DateUtils.calculateAge(r.getBirthdate()));
+		dto.setMedications(r.getMedications());
+		dto.setAllergies(r.getAllergies());
+		
+		return dto;
 	}
 }

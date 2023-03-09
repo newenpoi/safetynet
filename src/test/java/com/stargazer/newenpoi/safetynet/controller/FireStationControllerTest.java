@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import com.stargazer.newenpoi.safetynet.dto.CustomCoveredPersonDTO;
+import com.stargazer.newenpoi.safetynet.dto.PersonCoverageDTO;
 import com.stargazer.newenpoi.safetynet.service.FireStationService;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,7 +30,7 @@ public class FireStationControllerTest {
 	void testGetPopulationCoverage() throws IOException, ParseException {
 		// Given.
 		Long station = 3L;
-		CustomCoveredPersonDTO expected = new CustomCoveredPersonDTO();
+		PersonCoverageDTO expected = new PersonCoverageDTO();
 		
 		// When.
 		when(fireStationService.recupererPersonnesCouvertes("3")).thenReturn(expected);

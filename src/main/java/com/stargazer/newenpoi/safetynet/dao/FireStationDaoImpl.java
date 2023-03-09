@@ -1,7 +1,5 @@
 package com.stargazer.newenpoi.safetynet.dao;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,23 +12,24 @@ import com.stargazer.newenpoi.safetynet.util.JsonUtils;
 public class FireStationDaoImpl implements FireStationDao {
 
 	@Override
-	public List<FireStation> findAll() throws IOException {
+	public List<FireStation> findAll() {
 		// Charge les données json voulues en les convertissant sous forme d'objet Java.
 		return JsonUtils.getInstance().retrieve("firestations", FireStation.class);
 	}
 	
 	@Override
-	public List<FireStation> findByStation(String station) throws IOException {
+	public List<FireStation> findByStation(String station) {
 		return JsonUtils.getInstance().retrieve("firestations", "station", station, FireStation.class);
 	}
 	
 	@Override
-	public List<FireStation> findByAddress(String address) throws IOException {
+	public List<FireStation> findByAddress(String address) {
 		return JsonUtils.getInstance().retrieve("firestations", "address", address, FireStation.class);
 	}
 
 	@Override
-	public List<FireStation> findByStationIn(List<String> stations) throws IOException {
+	public List<FireStation> findByStationIn(List<String> stations) {
+		/*
 		List<FireStation> fireStations = new ArrayList<FireStation>();
 		
 		for (String station : stations) {
@@ -38,5 +37,8 @@ public class FireStationDaoImpl implements FireStationDao {
 		}
 		
 		return fireStations;
+		*/
+		
+		return stations.stream().flatMap(station -> findByStation(station).stream()).collect(Collectors.toList());
 	}
 }

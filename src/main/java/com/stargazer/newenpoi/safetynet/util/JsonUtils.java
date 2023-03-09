@@ -51,44 +51,59 @@ public class JsonUtils {
      */
     public <T> List<T> retrieve(String field, Class<T> type) {
     	ObjectMapper mapper = new ObjectMapper();
+		
+    	try {
+    		JsonNode root = mapper.readTree(getJsonData());
+	    	JsonNode node = root.get(field);
+	    	
+	    	if (node == null) throw new IllegalArgumentException("Le champ %s n'existe pas.".formatted(field));
+	    	
+	    	return mapper.readValue(node.traverse(), mapper.getTypeFactory().constructCollectionType(List.class, type));
+		} catch (IOException e) {
+			System.out.println("La lecture du fichier json a rencontré une erreur.");
+		}
     	
-    	JsonNode root = mapper.readTree(getJsonData());
-    	JsonNode node = root.get(field);
-    	
-    	if (node == null) throw new IllegalArgumentException("Le champ %s n'existe pas.".formatted(field));
-    	
-    	return mapper.readValue(node.traverse(), mapper.getTypeFactory().constructCollectionType(List.class, type));
+    	return null;
     }
     
-    public <T> List<T> retrieve(String field, String key, String expectedValue, Class<T> type) throws IOException {
+    public <T> List<T> retrieve(String field, String key, String value, Class<T> type) {
     	ObjectMapper mapper = new ObjectMapper();
     	List<T> filtered = new ArrayList<>();
     	
-    	JsonNode root = mapper.readTree(getJsonData());
-    	JsonNode nodes = root.get(field);
-    	
-    	if (nodes == null) throw new IllegalArgumentException("Le champ %s n'existe pas.".formatted(field));
-    	
-    	for (JsonNode node : nodes) {
-    		JsonNode value = node.get(key);
-    		if (value != null && value.asText().equals(expectedValue)) filtered.add(mapper.treeToValue(node, type));
-    	}
-    	
-    	return filtered;
+		try {
+			JsonNode root = mapper.readTree(getJsonData());
+	    	JsonNode nodes = root.get(field);
+	    	
+	    	if (nodes == null) throw new IllegalArgumentException("Le champ %s n'existe pas.".formatted(field));
+	    	
+	    	for (JsonNode node : nodes) {
+	    		if (node.get(key) != null && node.get(key).asText().equals(value)) filtered.add(mapper.treeToValue(node, type));
+	    	}
+	    	
+	    	return filtered;
+		} catch (IOException e) {
+			System.out.println("La lecture du fichier json a rencontré une erreur.");
+		}
+		
+		return null;
     }
 
-	public <T> T retrieve(String field, String key, String value, String secondKey, String secondValue, Class<T> type) throws IOException {
+	public <T> T retrieve(String field, String key, String value, String secondKey, String secondValue, Class<T> type) {
     	ObjectMapper mapper = new ObjectMapper();
     	
-    	JsonNode root = mapper.readTree(getJsonData());
-    	JsonNode nodes = root.get(field);
-    	
-    	if (nodes == null) throw new IllegalArgumentException("Le champ %s n'existe pas.".formatted(field));
-    	
-    	for (JsonNode node : nodes) {
-    		// Renvoie un objet de type générique si l'entrée correspond.
-    		if (node.get(key) != null && node.get(key).asText().equals(value) && node.get(secondKey).asText().equals(secondValue)) return mapper.treeToValue(node, type);
-    	}
+    	try {
+    		JsonNode root = mapper.readTree(getJsonData());
+    		JsonNode nodes = root.get(field);
+    		
+        	if (nodes == null) throw new IllegalArgumentException("Le champ %s n'existe pas.".formatted(field));
+        	
+        	for (JsonNode node : nodes) {
+        		// Renvoie un objet de type générique si l'entrée correspond.
+        		if (node.get(key) != null && node.get(key).asText().equals(value) && node.get(secondKey).asText().equals(secondValue)) return mapper.treeToValue(node, type);
+        	}
+		} catch (IOException e) {
+			System.out.println("La lecture du fichier json a rencontré une erreur.");
+		}
 		
 		return null;
 	}
